@@ -1,0 +1,14 @@
+{
+    "virtuoso_dir":"/home/IC",
+    "model_path":"/home/IC/Tech/tsmcN65/models/spectre/toplevel.scs",
+    "setup_file_path":"/home/IC/Desktop/RFIC-GPT_Wizard/RFIC-GPT_Wizard_Passive/layertrans.csv",
+    "simulation_path":"/home/IC/simulation",
+    "emx_work_addr":"/home/IC/EMX_work",
+    "proc_file_addr":"/home/IC/EMX_work/RC_IRCX_CRN65G+_1P9M+ALRDL_6X1Z1U_typical.proc",
+    "emx_addr":"/opt/eda/cadence/INTEGRAND60/bin/emx",
+    "tech":"tsmcN65",
+    "mos_name":"nch_lvt",
+    "lib_name":"rfic_codex_tsmcN65",
+    "project_name": "rfic_codex_project",
+    "model_type":"tt_lib"
+}

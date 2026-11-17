@@ -1,0 +1,15 @@
+{
+    "task": "PA",
+    "params": {
+        "Tech": "65nm",
+        "Vdda": 1.1,
+        "Frequency": 24,
+        "Gain_low": 18,
+        "Gain_up": 20,
+        "OP1dB_low": 16,
+        "DE_P1dB_w": 25,
+        "Iq_w": 10,
+        "NFmin_w": 10,
+        "V_over": 1.3
+    }
+}

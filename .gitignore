@@ -1,0 +1,12 @@
+__pycache__/
+*.py[cod]
+.venv/
+.env
+.env.*
+/skills/rfic-codex-design/assets/rfic_codex_project/json/deploy.json
+/skills/rfic-codex-design/assets/rfic_codex_project/pcell/RFIC_command.*
+/skills/rfic-codex-design/assets/rfic_codex_project_web/json/*
+!/skills/rfic-codex-design/assets/rfic_codex_project_web/json/*.example.json
+/skills/rfic-codex-design/assets/rfic_codex_project_web/gds/
+/skills/rfic-codex-design/assets/rfic_codex_project_web/png/
+

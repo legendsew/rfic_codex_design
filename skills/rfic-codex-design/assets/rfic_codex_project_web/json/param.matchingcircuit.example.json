@@ -1,0 +1,17 @@
+{
+    "task":"MatchingCircuit",
+    "params":{
+        "freq_value":24,
+        "freq_scope":4.2,
+        "Z_L_real":50,
+        "Z_L_imag":0,
+        "Z_opt_real":19.54,
+        "Z_opt_imag":22.82,
+        "S11":-12,
+        "IL":2,
+        "tech":"65nm",
+        "layer_p_thickness":"3.4",
+        "layer_s_thickness":"3.4",
+        "input_type":"DIFF_SINGLE"
+    }
+}

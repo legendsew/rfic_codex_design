@@ -1,0 +1,4 @@
+# RFIC.py itself uses only the Python standard library.
+# Optional analysis and plotting of simulation reports:
+numpy
+matplotlib
