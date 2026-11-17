@@ -29,4 +29,3 @@
 - `assets/rfic_codex_project_web/`：Windows 在线设计客户端及 PA、匹配参数示例。
 - `assets/rfic_codex_project/`：Cadence 的 Python/SKILL 接口、部署配置示例与匹配端口符号库。
 
-公开前确认源码与随附 OA 符号库允许分发。不要提交真实配置、账号缓存、PDK、模型、许可信息、生成的 GDS/S 参数、仿真报告或日志；不要把密码和令牌写到提示词、命令行参数或 Git 历史中。
