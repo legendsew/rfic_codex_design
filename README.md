@@ -15,11 +15,9 @@
 ## 安装和运行 Skill
 
 1. 在powershell中输入命令
-   > python "$env:USERPROFILE\.codex\skills\.system\skill-installer\scripts\install-skill-from-github.py" --repo legendsew/rfic_codex_design --path skills/rfic-codex-design --method git
-   
-   即可安装
+   `python "$env:USERPROFILE\.codex\skills\.system\skill-installer\scripts\install-skill-from-github.py" --repo legendsew/rfic_codex_design --path skills/rfic-codex-design --method git`即可安装
 
-2. 在Codex中输入：
+3. 在Codex中输入：
    > $rfic-codex-design
    
    即可调用Skill。
@@ -29,7 +27,7 @@
    
    来配置skill运行所必须的环境。
 
-3. 使用skill时需指定一个文件夹为项目工作文件夹，Codex会将必要的文件安装到该文件夹中。
+4. 使用skill时需指定一个文件夹为项目工作文件夹，Codex会将必要的文件安装到该文件夹中。
 
 ## 仓库内容
 
