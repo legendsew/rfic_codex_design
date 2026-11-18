@@ -19,7 +19,7 @@
    
    即可安装
 
-3. 在Codex中输入：
+2. 在Codex中输入：
    > $rfic-codex-design
    
    即可调用Skill。
