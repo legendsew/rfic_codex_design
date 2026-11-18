@@ -16,17 +16,19 @@
 
 1. 在 Linux 工作站或虚拟机上先找到此工程实际启动 Virtuoso 的工作目录，即加载项目插件的 `.cdsinit` 和配套 `cds.lib` 所在目录；这不是 Cadence 的软件安装目录。将 `assets/rfic_codex_project` 整个复制为该目录的直接子目录。例如启动目录为 `/home/example`，则项目应在 `/home/example/rfic_codex_project`，`virtuoso_dir` 写父目录、`project_name` 写子目录名。若用 SSH，只连接用户授权的主机。保留 `rfic_codex_symbol/` 的 OA 目录和隐藏文件。
 2. 复制 `json/deploy.example.json` 为 `json/deploy.json`。该文件从模块所在项目读取，但脚本生成的运行路径使用 `<virtuoso_dir>/<project_name>/`，两者须指向同一工作副本。因部分命令通过 shell 构建且未对每个路径加引号，优先使用不含空格或 shell 特殊字符的运行目录；需使用特殊路径时先核查对应调用。
-3. 核对 `virtuoso_dir` 中的 `cds.lib` 和初始化设置；确认 `tech`、`mos_name`、`model_path` 和 `model_type` 对应实际 PDK 与有效模型段。`lib_name` 是独立设计库，不是 PDK 本体。检查 `setup_file_path` 对应的 Wizard 层映射，以及 `emx_addr`、`emx_work_addr` 和 `proc_file_addr`。示例不是可直接使用的通用环境。
-4. 在已加载 Cadence 环境的终端验证 `virtuoso`、`strmout`、`ocean` 和 EMX 可用。Wizard 依赖当前表单，需要可用图形会话；SSH 无 DISPLAY 时应先确认使用桌面还是虚拟显示，虚拟显示不出现在用户桌面。发布版不要求手工预载 `pcell/run.il`：Python 会为不同步骤重写它。不要并发共享同一工作副本；`run.il`、`ocean/RFIC.ocn` 和某些中间结果会被重写。
+3. 检查虚拟机内是否安装Wizard，若未安装，安装包为`/rifc_codex_project`目录下的`RFIC-GPT_Wizard_v1.251126_CN.zip`，直接解压到当前目录，但务必在Linux系统下解压，否则会出现错误。随后运行解压得到的`RFIC-GPT Wizard`文件夹下的install.sh，按照提示先后输入当前虚拟机`cds.lib`和`.cdsinit`的文件路径，并在最后一步选择y，即安装完成。
+4. 核对 `virtuoso_dir` 中的 `cds.lib` 和初始化设置；确认 `tech`、`mos_name`、`model_path` 和 `model_type` 对应实际 PDK 与有效模型段。`lib_name` 是独立设计库，不是 PDK 本体。检查 `setup_file_path` 对应的 Wizard 层映射，以及 `emx_addr`、`emx_work_addr` 和 `proc_file_addr`。示例不是可直接使用的通用环境。
+5. 在已加载 Cadence 环境的终端验证 `virtuoso`、`strmout`、`ocean` 和 EMX 可用。Wizard 依赖当前表单，需要可用图形会话；SSH 无 DISPLAY 时应先确认使用桌面还是虚拟显示，虚拟显示不出现在用户桌面。发布版不要求手工预载 `pcell/run.il`：Python 会为不同步骤重写它。不要并发共享同一工作副本；`run.il`、`ocean/RFIC.ocn` 和某些中间结果会被重写。
 
 ## 3. 生成、提取和整机仿真
 
 在工作副本的 `python/` 下调用已有 `RFIC.py` 函数。发布包未附固定的 `RFIC_run.py`。按下面顺序组织调用，先用独立测试名验证环境：
 
 1. 调用 `create_lib()` 创建绑定到目标 PDK 的设计库；随后必须调用 `register_symbolLib()`，在 Virtuoso 中注册随包的 `rfic_codex_symbol` 库。确认该名字解析到本次使用的 OA 库，且能打开 `inport_symbol` 和 `outport_symbol`。若同名库已注册，函数不会重绑，先核对现有映射，再放置匹配端口。
-2. `generate_schematic(4, pa_code, cell_name)`、`copy_schematic(cell_name)`：通过 Wizard 更新 CSPA 模板后把有源电路复制到设计库。将共享模板视为会被修改的中间资产。
-3. 对输入、输出分别调用 `generate_schematic(3, net_code, net_name)` 和 `start_emx(net_name, f_low, f_high)`。频率传数字 GHz，例如 `3, 150`；上限和下限按实际 HB 谐波与仿真覆盖确定。若使用五次谐波，验证 23–25 GHz 时上限至少覆盖 125 GHz。检查 GDS、日志和本轮新生成的 `.s4p`，确认频率及端口顺序 `pri_p, pri_m, sec_p, sec_m`。若 EMX 报标签不靠近边缘或未找到，检查标签层/用途和导出 GDS，把对应标签移至实际端部边缘后重跑，不改金属拓扑来掩盖错误。
-4. `generate_testbench(cell_name)` 安装输入、输出模型；调用 `start_ADL_simulation(cell_name, pa_code, R, L, Cp_in, Cs_in, Cp_out, Cs_out, s4p_in, s4p_out)`。传给 OCEAN 的量用 Spectre 可读字符串，例如 `"2k"`、`"500p"`、`"41.91f"`；S 参数路径用 Cadence 可读的 Linux 绝对路径。确认电容与同一版图结果对应，不把回退模型与新版本电容混用。抽头 R/L 是仿真假设，不是与频率、偏置无关的固定设计值。
+2. 选择了工艺库后查阅该工艺库用于EMX仿真的`layermap`文件，用于更新`setup_file_path`所指向的`csv`文件。找到最顶层金属 (eg. AP层) `drawing` 的 `stream number` 和 `datatype`，分别填入 `M3_drawing_stream` 和 `M3_drawing_datatype`找到次顶层金属 `drawing` (e.g. M8 层) 的 `stream number` 和 `datatype`，分别填入 `M2_drawing_stream` 和 `M2_drawing_datatype`；找到第三顶层金属 `drawing` (e.g. M7 层) 的 `stream number` 和` datatype`，分别填入 `M1_drawing_stream` 和 `M1_drawing_datatype`。然后，找到对应的两个打孔层，VIA2 为 M2，M3 之间的打孔层，填入对应的 `stream number` 和 `datatype`；VIA1 为 M1，M2 之间的打孔层，填入对应的 `stream number` 和 `datatype`。最后在 M1_name, M2_name, M3_name 填入实际工艺库中三层顶层金属的名字。 每个工艺节点对应一个 `layertrans.csv` 文件。如果使用多个工艺节点，可以按照以上格式创建多个 layertrans.csv 文件，在使用对应工艺节点时修改`setup_file_path`为对应的`csv`文件即可。
+3. `generate_schematic(4, pa_code, cell_name)`、`copy_schematic(cell_name)`：通过 Wizard 更新 CSPA 模板后把有源电路复制到设计库。将共享模板视为会被修改的中间资产。
+4. 对输入、输出分别调用 `generate_schematic(3, net_code, net_name)` 和 `start_emx(net_name, f_low, f_high)`。频率传数字 GHz，例如 `3, 150`；上限和下限按实际 HB 谐波与仿真覆盖确定。若使用五次谐波，验证 23–25 GHz 时上限至少覆盖 125 GHz。检查 GDS、日志和本轮新生成的 `.s4p`，确认频率及端口顺序 `pri_p, pri_m, sec_p, sec_m`。若 EMX 报标签不靠近边缘或未找到，检查标签层/用途和导出 GDS，允许自行编写脚本把对应标签移至实际端部边缘后重跑，不改金属拓扑来掩盖错误。
+5. `generate_testbench(cell_name)` 安装输入、输出模型；调用 `start_ADL_simulation(cell_name, pa_code, R, L, Cp_in, Cs_in, Cp_out, Cs_out, s4p_in, s4p_out)`。传给 OCEAN 的量用 Spectre 可读字符串，例如 `"2k"`、`"500p"`、`"41.91f"`；S 参数路径用 Cadence 可读的 Linux 绝对路径。确认电容与同一版图结果对应，不把回退模型与新版本电容混用。抽头 R/L 是仿真假设，不是与频率、偏置无关的固定设计值。
 
 ## 4. 结果与优化
 
