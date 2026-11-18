@@ -1,26 +1,33 @@
 # RFIC CODEX Design
 
-用 Codex 串联 RFIC-GPT 的 PA 候选设计与 Cadence 仿真：从自然语言指标出发，获取有源核心和匹配网络的生成代码，在 Virtuoso 中生成电路与版图，用 EMX 和 Spectre 验证整机，再按仿真结果迭代。网站指标用于筛选候选，最终结论以本地仿真为准。
+用 Codex 结合RFIC-GPT 与 Cadence Virtuoso：从自然语言指标出发，获取有源核心和匹配网络的生成代码，在 Virtuoso 中生成电路与版图，用 EMX 和 Spectre 验证整机，再按仿真结果优化迭代。
 
-## 安装 Skill
+## 项目概述
 
-1. 克隆或下载本仓库。
-2. 将整个 `skills/rfic-codex-design/` 复制到工作项目的 `.agents/skills/` 下，保留 `references/` 和 `assets/`。
-3. 在该项目中打开 Codex，输入：
-   > $rfic-codex-design 先检查环境并准备设计参数，不提交任务。示例规格：65 nm、中心 24 GHz、验收频带 23–25 GHz，增益 >18 dB、OP1dB >16 dBm、DE_P1dB >25%，并检查稳定性。
+### RFIC-GPT
 
-只做在线候选设计可以不部署 Cadence；已有生成代码时也可以跳过在线步骤。安装 Skill 不会自动安装厂商软件、配置 SSH 或提交网站任务。手动使用时，同样从 [运行说明](skills/rfic-codex-design/references/workflows.md) 开始。
+冉谱的 RFIC-GPT，是一款智能生成式设计平台。通过建立针对工艺特性的垂直AI模型和智能体，在秒级时间，生成符合指标和面积的无源网络和“端到端”射频模拟单元电路的原理图和版图，为射频和高速模拟链路芯片设计师提供了快捷高效的便捷利器。它不仅是一款全新的国产智能化AI设计平台，在国际上也处于领先地位。RFIC-GPT 最大特点是协助射频设计者快速收敛，找到最优设计点、大幅度减少迭代次数、简化并加速复杂的设计流程。
 
-## 运行环境
+### RFIC-CODEX
 
-| 部分 | 需要准备 |
-| --- | --- |
-| 在线设计 | Windows、Python 3、`requirements.txt` 中的依赖、可用的 ICProphet 账户和积分 |
-| 本地仿真 | Linux 工作站或虚拟机、Python 3、Virtuoso、Spectre/OCEAN、EMX、对应许可和 PDK、RFIC-GPT_Wizard 与 CSPA 模板；导入 Wizard 时需要图形会话 |
+本项目通过结合RFIC-GPT与Cadence Virtuoso，能根据RFIC-GPT的计算结果将原理图和版图导入Cadence Virtuoso，并根据实际仿真结果自行优化电路设计。在Codex中使用该Skill，用户仅使用自然语言，Codex便能自行完成电路仿真、优化的全流程。该Skill目前仅支持PA原理图的设计，版图级仿真和其它射频电路的设计功能正在开发中。
 
-首次运行时，分别检查 Windows 主机和 Linux 虚拟机上的 Python 与依赖；缺少依赖时，在各自工作环境中使用对应项目的 `requirements.txt` 安装。Cadence 工作副本要放在实际启动 Virtuoso 的工作目录下（即本工程使用的 `.cdsinit` 与 `cds.lib` 所在目录），并通过 `register_symbolLib()` 注册随附的端口符号库。
+## 安装和运行 Skill
 
-发布包中的 Wizard 用图形会话，EMX 和电路仿真由命令行启动。发布包不包含此前演示用的单会话 GUI 驱动或原生 ADE 二维扫描。不要把示例路径、工艺名或指标当成通用默认值。
+1. 在powershell中输入命令
+   > python "$env:USERPROFILE\.codex\skills\.system\skill-installer\scripts\install-skill-from-github.py" --repo legendsew/rfic_codex_design --path skills/rfic-codex-design --method git
+   
+   即可安装
+
+3. 在Codex中输入：
+   > $rfic-codex-design
+   
+   即可调用Skill。
+   
+   首次使用建议发送
+   > $rfic-codex-design 检查运行环境。
+   
+   来配置skill运行所必须的环境。 
 
 ## 仓库内容
 
