@@ -167,7 +167,7 @@ def generate_testbench(cell_name):
     testbench_result.wait()
     return testbench_result.returncode    
 
-def start_ADL_simulation(cell_name,generation_code,R,L,Cp_in,Cs_in,Cp_out,Cs_out,s4p_path_in,s4p_path_out):
+def start_ADE_simulation(cell_name,generation_code,R,L,Cp_in,Cs_in,Cp_out,Cs_out,s4p_path_in,s4p_path_out):
     parts = generation_code.split("/")
     freq = float(parts[1])
     vdd = float(parts[2])
@@ -198,8 +198,7 @@ analysis('hb ?HBTranMode "Yes"  ?tstab "50p"  ?autoharms "yes"
                 ?autotstab ""  ?autosteady "yes"  ?oversample list("1")  ?fundfreqs list("(Freq)")
                 ?maxharms list("5")  )
 analysis('dc ?saveOppoint t  ?param "temp"  )
-analysis('sp ?ports list("/PORT0" "/PORT1")  ?start "1G"  ?stop "80G" 
-                ?lin "2000")
+analysis('sp ?ports list("/PORT0" "/PORT1")  ?start "1G"  ?stop "80G"  )
 desVar(   "Freq" {freq}G    )
 desVar(   "Mul" {mul}      )
 desVar(   "Mul2" {mul2}      )
@@ -221,7 +220,7 @@ envOption(
 )
 save( 'i "/Vdd/PLUS" )
 temp( 27 )
-foreach(val '(-30 -25 -20 -15 -10 -5 2 4 6 8 10 12 14 16 18 20 22 24 26 28 30 )
+foreach(val '(-30 -25 -20 -15 -10 -5 0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1 1.1 1.2 1.3 1.4 1.5 1.6 1.7 1.8 1.9 2 2.1 2.2 2.3 2.4 2.5 2.6 2.7 2.8 2.9 3.0 3.1 3.2 3.3 3.4 3.5 3.6 3.7 3.8 3.9 4.0 4.1 4.2 4.3 4.4 4.5 4.6 4.7 4.8 4.9 5.0 5.1 5.2 5.3 5.4 5.5 5.6 5.7 5.8 5.9 6.0 6.2 6.4 6.6 6.8 7.0 7.2 7.4 7.6 7.8 8.0 8.5 9.0 9.5 10.0 11 12 13 14 15 16 17 18 19 20 22 24 26 28 30 )
     desVar("pin" val)
     run()
     fout = outfile("{path_output}" "a")
@@ -264,7 +263,7 @@ else
     else:
             print(f"仿真失败({result.returncode})")
 
-def Zin_ADL_simulation(cell_name,generation_code,R,L,ZLoad_real,ZLoad_imag):
+def Zin_ADE_simulation(cell_name,generation_code,R,L,ZLoad_real,ZLoad_imag):
     parts = generation_code.split("/")
     freq = float(parts[1])
     vdd = float(parts[2])
@@ -292,7 +291,7 @@ modelFile(
         '("{model_path}" "{model_type}")
 )
 analysis('sp ?ports list("/PORT1" "/PORT2")  ?start "Freq*0.5"  ?stop "Freq*1.5"
-                ?lin "2000"  )
+                ?lin "100"  )
 desVar(   "Freq" {freq}G    )
 desVar(   "Mul" {mul}      )
 desVar(   "Mul2" {mul2}      )
