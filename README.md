@@ -23,7 +23,7 @@
    即可调用Skill。
    
    首次使用建议发送
-   > $rfic-codex-design 检查运行环境。
+   > $rfic-codex-design 初次运行。
    
    来配置skill运行所必须的环境。
 
