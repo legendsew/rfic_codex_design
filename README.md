@@ -1,6 +1,6 @@
 # RFIC CODEX Design
 
-用 Codex 结合RFIC-GPT 与 Cadence Virtuoso：从自然语言指标出发，获取有源核心和匹配网络的生成代码，在 Virtuoso 中生成电路与版图，用 EMX 和 Spectre 验证整机，再按仿真结果优化迭代。
+用 Codex 结合RFIC-GPT 与 Cadence Virtuoso：从自然语言指标出发，获取有源核心和匹配网络的生成代码，在 Virtuoso 中生成电路与版图，用 EMX 和 Spectre 进行仿真验证，再按仿真结果优化迭代。
 
 ## 项目概述
 
