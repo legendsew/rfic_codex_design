@@ -12,12 +12,18 @@
 
 本项目通过结合RFIC-GPT与Cadence Virtuoso，能根据RFIC-GPT的计算结果将原理图和版图导入Cadence Virtuoso，并根据实际仿真结果自行优化电路设计。在Codex中使用该Skill，用户仅使用自然语言，Codex便能自行完成电路仿真、优化的全流程。该Skill目前仅支持单级差分共源PA原理图的设计，版图级仿真和其它射频电路的设计功能正在开发中。
 
-## 安装和运行 Skill
+## 使用说明
 
-1. 在powershell中输入命令
+本项目的开发和验证环境为Windows 10 系统主机，Linux CentOS 7虚拟机，Cadence Virtuoso 618 仿真软件，其余运行环境不保证能运行。
+
+### 安装Skill
+
+在powershell中输入命令
    `python "$env:USERPROFILE\.codex\skills\.system\skill-installer\scripts\install-skill-from-github.py" --repo legendsew/rfic_codex_design --path skills/rfic-codex-design --method git`即可安装
 
-3. 在Codex中输入：
+### 使用Skill
+
+2. 在Codex中输入：
    > $rfic-codex-design
    
    即可调用Skill。
