@@ -10,7 +10,7 @@
 
 ### RFIC-CODEX
 
-本项目通过结合RFIC-GPT与Cadence Virtuoso，能根据RFIC-GPT的计算结果将原理图和版图导入Cadence Virtuoso，并根据实际仿真结果自行优化电路设计。在Codex中使用该Skill，用户仅使用自然语言，Codex便能自行完成电路仿真、优化的全流程。该Skill目前仅支持PA原理图的设计，版图级仿真和其它射频电路的设计功能正在开发中。
+本项目通过结合RFIC-GPT与Cadence Virtuoso，能根据RFIC-GPT的计算结果将原理图和版图导入Cadence Virtuoso，并根据实际仿真结果自行优化电路设计。在Codex中使用该Skill，用户仅使用自然语言，Codex便能自行完成电路仿真、优化的全流程。该Skill目前仅支持单级差分共源PA原理图的设计，版图级仿真和其它射频电路的设计功能正在开发中。
 
 ## 安装和运行 Skill
 
@@ -27,12 +27,14 @@
    
    来配置skill运行所必须的环境。
 
-4. 使用skill时需指定一个文件夹为项目工作文件夹，Codex会将必要的文件安装到该文件夹中。
+4. 需要使用本skill进行电路设计时，输入`$rfic-codex-design`，后面加上具体的电路要求即可。例： `$rfic-codex-design 生成一个PA，工艺为TSMC 65nm工艺库，工作频率为23 – 25 GHz，中心频率为24GHz，小信号增益至少为18dB，增益平坦度小于1dB，1dB压缩点输出功率大于16dBm，1dB压缩点漏极效率大于25%`
+
+5. 使用skill时需指定一个主机上的文件夹为项目工作文件夹，Codex会将必要的文件安装到该文件夹中。
 
 ## 仓库内容
 
 - [SKILL.md](skills/rfic-codex-design/SKILL.md)：供 Codex 识别任务和选择流程。
-- [workflows.md](skills/rfic-codex-design/references/workflows.md)：部署、调用方式、结果验收与排错。
+- [references](skills/rfic-codex-design/references/)：部署、调用方式、结果验收与排错的参考文档。
 - `assets/rfic_codex_project_web/`：Windows 在线设计客户端及 PA、匹配参数示例。
 - `assets/rfic_codex_project/`：Cadence 的 Python/SKILL 接口、部署配置示例与匹配端口符号库。
 
