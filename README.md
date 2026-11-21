@@ -37,6 +37,8 @@
 
 5. 使用skill时需指定一个主机上的文件夹为项目工作文件夹，Codex会将必要的文件安装到该文件夹中。
 
+6. 推荐在`Goal`模式中使用本skill。
+
 ## 仓库内容
 
 - [SKILL.md](skills/rfic-codex-design/SKILL.md)：供 Codex 识别任务和选择流程。
