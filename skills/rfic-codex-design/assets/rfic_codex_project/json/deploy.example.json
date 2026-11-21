@@ -10,5 +10,7 @@
     "mos_name":"nch_lvt",
     "lib_name":"rfic_codex_tsmcN65",
     "project_name": "rfic_codex_project",
-    "model_type":"tt_lib"
+    "model_type":"tt_lib",
+    "show_gui": false,
+    "gui_display": ":0"
 }

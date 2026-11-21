@@ -1,21 +1,87 @@
-procedure(create_lib(lib_name lib_path Tech)
-    if(ddGetObj(lib_name)==nil then
-        ddCreateLib(lib_name lib_path)
-        techBindTechFile(ddGetObj(lib_name) Tech)
-        )
-    )
+unless(boundp('RFIC_session_active) RFIC_session_active=nil)
+unless(boundp('RFIC_session_generation) RFIC_session_generation=0)
+unless(boundp('RFIC_poll_pending) RFIC_poll_pending=nil)
+unless(boundp('RFIC_command_busy) RFIC_command_busy=nil)
+
+procedure(RFIC_write_command_status(status_path status)
+    let((port)
+        port=outfile(status_path)
+        unless(port error("RFIC: cannot write command status"))
+        fprintf(port "%d" status)
+        close(port)
+        t))
+
+procedure(RFIC_execute_command(command status_path completion_delay)
+    let((result status)
+        result=errset(apply(command nil) t)
+        status=if(result 0 1)
+        if(completion_delay > 0 && status == 0 then
+            hiRegTimer(sprintf(nil "RFIC_write_command_status(%L %d)" status_path status) completion_delay)
+        else
+            RFIC_write_command_status(status_path status))
+        result))
+
+procedure(RFIC_schedule_poll()
+    when(RFIC_session_active && !RFIC_poll_pending
+        RFIC_poll_pending=t
+        hiRegTimer(sprintf(nil "RFIC_poll_commands(%d)" RFIC_session_generation) 1)))
+
+procedure(RFIC_poll_commands(@optional generation)
+    when(generation && generation == RFIC_session_generation && RFIC_session_active
+        RFIC_poll_pending=nil
+        when(!RFIC_command_busy && isFile(RFIC_command_path)
+            let((running_path result)
+                RFIC_command_busy=t
+                running_path=strcat(RFIC_command_path ".running")
+                if(renameFile(RFIC_command_path running_path) then
+                    result=errset(load(running_path) t)
+                    deleteFile(running_path)
+                    unless(result RFIC_write_command_status(RFIC_status_path 1))
+                else
+                    RFIC_write_command_status(RFIC_status_path 1))
+                RFIC_command_busy=nil))
+        RFIC_schedule_poll()))
+
+procedure(RFIC_start_session(command_path status_path)
+    RFIC_command_path=command_path
+    RFIC_status_path=status_path
+    unless(RFIC_session_active
+        RFIC_session_active=t
+        RFIC_session_generation=RFIC_session_generation+1
+        RFIC_poll_pending=t
+        hiRegTimer(sprintf(nil "RFIC_poll_commands(%d)" RFIC_session_generation) 10))
+    unless(getd('show_EMX_gui)
+        unless(boundp('RFIC_emx_config_path) error("RFIC: EMX interface path is not configured"))
+        load(RFIC_emx_config_path))
+    RFIC_schedule_poll()
+    t)
 
 procedure(open_wizard()
     _Passive_tool_APP_FieldFormCB()
     )
 
-procedure(fill_wizard(value Tech mos_name lib_name Generation_Code cell_name model_path setup_file_path)
+procedure(create_lib(lib_name lib_path tech)
+    unless(ddGetObj(lib_name)
+        unless(ddGetObj(tech) error("RFIC: PDK library %s is not registered" tech))
+        unless(ddCreateLib(lib_name lib_path) error("RFIC: Cannot create design library %s" lib_name))
+        techBindTechFile(ddGetObj(lib_name) tech)
+    )
+)
+
+procedure(RFIC_register_symbol_lib(lib_name lib_path)
+    unless(ddGetObj(lib_name)
+        unless(isDir(lib_path) error("RFIC: Symbol library directory not found: %s" lib_path))
+        unless(ddCreateLib(lib_name lib_path) error("RFIC: Cannot register symbol library %s" lib_name))
+    )
+)
+
+procedure(fill_wizard(value tech mos_name lib_name Generation_Code cell_name model_path setup_file_path)
     if(value == 4 then
         hiGetCurrentForm()->Passive_tool_APP_Field->value = 4
         Active_Field_CallBack_Load()
         hiGetCurrentForm()->Passive_tool_APP_Field->page4->t_sourceLibComb->value="CSPA"
         hiGetCurrentForm()->Passive_tool_APP_Field->page4->t_sourceCellComb->value="CSPA_lvt4t"
-        hiGetCurrentForm()->Passive_tool_APP_Field->page4->t_destnmos4tLibComb->value=Tech
+        hiGetCurrentForm()->Passive_tool_APP_Field->page4->t_destnmos4tLibComb->value=tech
         hiGetCurrentForm()->Passive_tool_APP_Field->page4->t_destnmos4tCellComb->value=mos_name
         hiGetCurrentForm()->Passive_tool_APP_Field->page4->model_pathField->value=model_path
         hiGetCurrentForm()->Passive_tool_APP_Field->page4->VariablesSetupField->value= Generation_Code
@@ -35,6 +101,27 @@ procedure(fill_wizard(value Tech mos_name lib_name Generation_Code cell_name mod
 procedure(close_log_window()
     system("xdotool search --name \"Stream in translation complete\" key --window %@ Escape")
     )
+
+procedure(RFIC_confirm_parametric_points(checks)
+    when(boundp('RFIC_parametric_confirmation_active) && RFIC_parametric_confirmation_active
+        system("xdotool search --onlyvisible --name '^Too Many Points[?]$' key --window %@ Return >/dev/null 2>&1")
+        if(checks > 0 then
+            hiRegTimer(sprintf(nil "RFIC_confirm_parametric_points(%d)" checks-1) 2)
+        else
+            RFIC_parametric_confirmation_active=nil))
+    t)
+
+procedure(RFIC_close_confirmation_windows(@optional (checks 0))
+    when(checks == 0 || (boundp('RFIC_close_confirmations_active) && RFIC_close_confirmations_active)
+        when(boundp('apaCloseWindowDBox) &&
+            system("xdotool search --onlyvisible --name '^Close$' >/dev/null 2>&1") == 0
+            hiDBoxOK(apaCloseWindowDBox))
+        when(boundp('sevblockingDialogBox) &&
+            system("xdotool search --onlyvisible --name '^Save State Query$' >/dev/null 2>&1") == 0
+            hiDBoxOK(sevblockingDialogBox))
+        when(checks > 0 && RFIC_close_confirmations_active
+            hiRegTimer(sprintf(nil "RFIC_close_confirmation_windows(%d)" checks-1) 2)))
+    t)
 
 procedure(BBoxRightOfX(bBox xLimit)
     let((ll lx)
@@ -99,7 +186,7 @@ procedure(RFIC_Delete(libName cellName xLimit)
         )
     )
 
-procedure(copy_schematic(cell_name lib_name)
+procedure(copy_schematic(cell_name @optional (lib_name "tsmcN65"))
     let((cv sourceCellViewID)
         sourceCellViewID = dbOpenCellViewByType("CSPA" "CSPA_lvt4t" "schematic" "" "r")
         cv = dbCopyCellView(
@@ -237,9 +324,9 @@ procedure(edit_property(cv)
         )
     )
 
-procedure(place_in_transformer(cv x y)
+procedure(place_in_transformer(cv x y @optional (symbol_lib "tsmcN65"))
     let((nport_master nport port_master port)
-        nport_master = dbOpenCellViewByType("rfic_codex_symbol" "inport_symbol" "symbol" "" "r")
+        nport_master = dbOpenCellViewByType(symbol_lib "inport_symbol" "symbol" "" "r")
         port_master = dbOpenCellViewByType("analogLib" "port" "symbol" "" "r")
         schCreateInst(
             cv
@@ -328,9 +415,9 @@ procedure(place_in_transformer(cv x y)
         )
     )
 
-procedure(place_out_transformer(cv x y)
+procedure(place_out_transformer(cv x y @optional (symbol_lib "tsmcN65"))
     let((nport_master nport port_master)
-        nport_master = dbOpenCellViewByType("rfic_codex_symbol" "outport_symbol" "symbol" "" "r")
+        nport_master = dbOpenCellViewByType(symbol_lib "outport_symbol" "symbol" "" "r")
         port_master = dbOpenCellViewByType("analogLib" "port" "symbol" "" "r")
         schCreateInst(
             cv

@@ -58,13 +58,24 @@ Linux 也可使用 python3，但安装包和执行脚本必须使用同一个解
 
 初次配置时，用户尚未指定工艺库，可以暂不填写相关字段。其余路径必须确定，找不到的路径告知用户。正式仿真前补齐工艺相关字段。
 
+暂不填写只适用于配置草稿。使用时将 deploy.example.json 复制为 json/deploy.json 并填写实际值；RFIC.py 在导入时就读取必填字段并创建运行目录，因此必须在导入或调用它之前补齐字段，不能用导入模块的方式检查尚未完成的配置。
+
 多个工艺库可分别保存配置，例如 deploy.tsmcN65.json。执行相应工艺任务前，将选定配置复制为 deploy.json。
 
 ## 6 检查 Cadence 和图形会话
 
 在已加载 Cadence 环境的终端验证 virtuoso、strmout、ocean 和 EMX 可用。
 
-Wizard 依赖当前表单，需要可用图形会话。SSH 没有 DISPLAY 时，先确认桌面或虚拟显示方案。按本技能要求在虚拟桌面上运行，不在用户实际桌面展示导入操作。
+两种显示模式都要检查 xdotool，它用于 Wizard 和 ADE 确认窗口处理；show_gui=false 还需要支持 -displayfd 的 Xvfb。这些是 Linux 系统工具，不由 pip 或 Python requirements.txt 安装，缺少时按系统的软件包管理方式和权限处理。
+
+Wizard、ADE 和图形 EMX 接口需要可用图形会话。设计开始前确认用户是否要看到界面，据此设置 deploy.json 的 show_gui，并在整个同一电路设计期间保持不变；未说明时先询问，不直接开始设计。不能为排查错误临时切换参数或关闭重开来规避该限制。
+
+- show_gui=false：检查 Linux 的 Xvfb 和 xdotool 可用，RFIC.py 自动分配独立虚拟显示、启动常驻 Virtuoso，所有由该进程创建的窗口均使用这一显示；无需外套 xvfb-run，也无需将 SSH 的 DISPLAY 强行设为 :0。
+- show_gui=true：检查实际桌面的 X 显示和访问权限。可用 gui_display 指定，例如 :0；未配置时优先用环境 DISPLAY，否则默认 :0。该参数不创建桌面，也不绕过 X 的访问权限。
+- 两种模式都使用图形版 Virtuoso；false 只是把图形环境放在不可见的虚拟显示中，不是改用 -nograph。确认 EMX 安装目录中存在 virtuoso_ui/emxinterface/emxskill/emxconfig.il，脚本从 emx_addr 的安装根目录推导此路径。
+- RFIC.py 与 RFIC.il 必须成套部署，后者包含命令轮询、状态返回及窗口清理函数。只替换 Python 而保留旧批处理 RFIC.il 会缺少会话接口。
+- emxconfig.il 是用户本机 EMX 安装组件，不是项目安装包内自带的文件，还会加载同一接口目录中的 emxform.ils 等资源。必须安装完整且版本匹配的 EMX 图形接口；只复制单个配置文件不能替代安装。当前代码按 emx_addr 的安装根目录推导接口路径，布局不一致时报告实际路径差异，不擅自复制厂商接口或修改脚本绕过检查。
+- 初次验证应检查连续调用复用同一 PID，并在完成后调用 close_virtuoso()，确认该 Virtuoso 和脚本创建的 Xvfb 均退出。不关闭用户的桌面显示服务或其他工程会话。
 
 只通过已有配置和 run.py 调用适配环境。若部署路径与脚本要求不兼容，报告具体问题，不修改其他程序脚本。
 

@@ -36,43 +36,61 @@ def load_token():
         return None
 
 def login():
-    user_name = input("账号: ").strip()
-    password = getpass("密码: ")
+    while True:
+        user_name = input("账号（输入 q 退出）: ").strip()
+        if user_name.lower() == "q":
+            raise SystemExit("已取消登录")
 
-    password_hash = hashlib.md5(
-        password.encode("utf-8")
-    ).hexdigest()
+        password = getpass("密码: ")
 
-    payload = {
-        "user_name": user_name,
-        "login_type": "password",
-        "login_source": "user",
-        "password": password_hash,
-        "user_id": ""
-    }
+        if not user_name or not password:
+            print("账号和密码不能为空，请重新输入。\n")
+            continue
 
-    response = requests.post(
-        LOGIN_URL,
-        json=payload,
-        timeout=30
-    )
+        password_hash = hashlib.md5(
+            password.encode("utf-8")
+        ).hexdigest()
 
-    response.raise_for_status()
+        payload = {
+            "user_name": user_name,
+            "login_type": "password",
+            "login_source": "user",
+            "password": password_hash,
+            "user_id": ""
+        }
 
-    data = response.json()
+        try:
+            response = requests.post(
+                LOGIN_URL,
+                json=payload,
+                timeout=30
+            )
+            response.raise_for_status()
+            data = response.json()
+        except requests.RequestException:
+            print("登录请求失败，请检查网络后重新输入。\n")
+            continue
+        except ValueError:
+            print("服务器返回的内容无法解析，请稍后重试。\n")
+            continue
 
-    if data.get("code") != 0:
-        raise RuntimeError(
-            f"登录失败: {data.get('message', '未知错误')}"
-        )
+        if data.get("code") != 0:
+            print(
+                f"登录失败：{data.get('message', '未知错误')}"
+            )
+            print("请重新输入账号和密码；如提示限流或锁定，请退出后稍候重试。\n")
+            continue
 
-    token = data.get("result", {}).get("token")
+        result = data.get("result") or {}
+        token = result.get("token")
 
-    save_token(token)
+        if not isinstance(token, str) or not token.strip():
+            print("服务器未返回有效 token，请重新登录。\n")
+            continue
 
-    print("登录成功")
-
-    return token
+        save_token(token)
+        print("登录成功")
+        return token
 
 def create_session(token):
     session = requests.Session()
@@ -138,4 +156,3 @@ session = get_session()
 if get_usrid() == None:
     print("需重新登录")
     TOKEN_FILE.unlink()
-    session = get_session()
