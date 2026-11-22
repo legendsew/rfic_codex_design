@@ -34,7 +34,7 @@
 - 用户尚未指定工艺库时，请其确定，并说明需要包含可使用的 proc 文件。
 - 多工艺配置可以分别保存，运行时将选定配置复制为 deploy.json。
 - 用户在发起设计任务时必须说明是否要看到界面，未说明时开始设计前先确认。show_gui=false 表示使用脚本创建的 Xvfb 虚拟显示，true 表示显示到实际桌面，必须是 JSON 布尔值，不写成字符串。
-- 同一电路从生成、EMX、整机验证到所有优化结束，show_gui 必须保持不变；不能通过中途关闭再重开切换模式。仅在开始新的电路设计前重新选择。
+- 同一电路从生成、EMX、完整 PA 电路验证到所有优化结束，show_gui 必须保持不变；不能通过中途关闭再重开切换模式。仅在开始新的电路设计前重新选择。
 - gui_display 是 show_gui=true 时使用的 X 显示，可选，默认优先采用环境 DISPLAY，否则使用 :0；必须具备对应桌面的访问权限。show_gui=false 时自动分配虚拟显示，不使用 gui_display，也不需要外套 xvfb-run。
 - 会话自动加载与 emx_addr 同一安装根目录下的 virtuoso_ui/emxinterface/emxskill/emxconfig.il。确认该图形 EMX 接口存在；RFIC.py 和 RFIC.il 必须成套部署。
 - 可选 lib_path、symbol_lib、symbol_lib_path 分别指定工作库路径、符号库名及路径。默认工作库为 virtuoso_dir/lib_name；符号库默认 rfic_codex_symbol，优先取项目内同名目录，否则取 virtuoso_dir 下同名目录。
@@ -130,7 +130,7 @@ transformer_name 指定版图，Freq_low、Freq_up 为 EMX 频率下限和上限
 
 函数在常驻 Virtuoso 中打开版图和 EMX 表单，提交仿真并等待实际完成；成功后等待约 5 秒再关闭 EMX 及对应版图窗口，Virtuoso 进程继续保留。
 
-### 4.4 复制核心与生成整机测试台
+### 4.4 复制核心与生成完整 PA 电路测试台
 
 ```python
 copy_schematic(cell_name)
@@ -139,9 +139,9 @@ generate_testbench(cell_name)
 
 copy_schematic() 将 Wizard 导入的初始原理图复制到工作库内名为 cell_name 的原理图。
 
-generate_testbench() 在该原理图中生成整机仿真所需输入、输出匹配网络。
+generate_testbench() 在该原理图中生成完整 PA 电路仿真所需输入、输出匹配网络。
 
-### 4.5 整机仿真
+### 4.5 完整 PA 电路仿真
 
 
 ```python
@@ -175,7 +175,7 @@ Zin_ADE_simulation(
 
 measure_Zin() 创建用于测输入阻抗的原理图。
 
-Zin_ADE_simulation() 在当前确定的输出负载阻抗 ZLoad 下测量输入阻抗。ZLoad_real、ZLoad_imag 是负载的实部、虚部，其余参数含义与整机一致。负载的选择见 optimization.md。
+Zin_ADE_simulation() 在当前确定的输出负载阻抗 ZLoad 下测量输入阻抗。ZLoad_real、ZLoad_imag 是负载的实部、虚部，其余参数含义与完整 PA 电路一致。负载的选择见 optimization.md。
 
 结果输出到项目的 output/RFIC_<原理图名称>/RFIC_<原理图名称>_Zin.txt。
 
@@ -196,10 +196,10 @@ load_pull() 创建负载牵引原理图。
 | --- | --- |
 | ZLoad_real、ZLoad_imag | 当前试探负载的实部、虚部 |
 | s4p_path_in | 测得输入阻抗后，在网站重新设计输入匹配网络，再经 EMX 提取得到的 s4p 路径 |
-| pin | 负载牵引前整机仿真得到的 1 dB 压缩点输入功率 |
-| 其余参数 | 与整机仿真一致 |
+| pin | 负载牵引前完整 PA 电路仿真得到的 1 dB 压缩点输入功率 |
+| 其余参数 | 与完整 PA 电路仿真一致 |
 
-默认 sweep_pin=False 时，一次调用只产生一个负载点的数据。改变 ZLoad 并多次调用完成负载牵引，每行包含实部、虚部、Pout、Gain、Iq、Idd、DE 共七列；不包含整机报告中的 S11/S22、Kf/B1f，不能凭该报告单独完成稳定性验收。
+默认 sweep_pin=False 时，一次调用只产生一个负载点的数据。改变 ZLoad 并多次调用完成负载牵引，每行包含实部、虚部、Pout、Gain、Iq、Idd、DE 共七列；不包含完整 PA 电路报告中的 S11/S22、Kf/B1f，不能凭该报告单独完成稳定性验收。
 
 结果输出到项目的 output/RFIC_<原理图名称>/RFIC_<原理图名称>_load_pull.txt。写模式为追加，多次调用不会覆盖已有负载牵引结果。
 
@@ -216,7 +216,7 @@ load_pull_parametric_simulation(
 )
 ```
 
-先调用 load_pull(cell_name) 建立测试台，再调用本函数。pin 固定为该候选整机测得的 1 dB 压缩点输入功率；不扫描 Pin。实部、虚部采用 ADE Parametric Analysis 嵌套等间隔扫描，共 real_points×imag_points 点。
+先调用 load_pull(cell_name) 建立测试台，再调用本函数。pin 固定为该候选完整 PA 电路测得的 1 dB 压缩点输入功率；不扫描 Pin。实部、虚部采用 ADE Parametric Analysis 嵌套等间隔扫描，共 real_points×imag_points 点。
 
 | 参数 | 要求 |
 | --- | --- |
@@ -245,7 +245,7 @@ close_virtuoso()
 | 导入原理图或版图 | generate_schematic() |
 | 版图首次导入或更新 | start_emx()，取得新的 s4p |
 | 生成完整原理图 | copy_schematic() |
-| 整机仿真 | generate_testbench() → start_ADE_simulation() |
+| 完整 PA 电路仿真 | generate_testbench() → start_ADE_simulation() |
 | 测输入阻抗 | measure_Zin() → Zin_ADE_simulation() |
 | 负载牵引 | load_pull() → 多次 load_pull_simulation() |
 | 二维负载粗扫或细扫 | load_pull() → load_pull_parametric_simulation() |
@@ -253,7 +253,7 @@ close_virtuoso()
 
 ## 6 仿真数据与执行限制
 
-先做匹配版图 EMX，再构建整机。读取 output 对应文件夹中的原始数据，计算电路指标，报告给用户并判断是否达标。
+先做匹配版图 EMX，再构建完整 PA 电路。读取 output 对应文件夹中的原始数据，计算电路指标，报告给用户并判断是否达标。
 
 若 EMX 提示 label 不靠近边缘，允许通过 run.py 组织所需操作，调整边缘以解决报错。不得改变版图拓扑结构。
 
@@ -261,11 +261,11 @@ close_virtuoso()
 
 当前函数不提供输入功率扫描点或步长参数。使用现有扫描数据分析压缩点，不能修改其他脚本或生成的 OCEAN 脚本来加密采样。已有结果不足以确定指标时，说明精度或覆盖限制。
 
-整机仿真使用 ADE Parametric Analysis，固定 Pin=-30～30 dBm、步长 2 dB，共 31 点。整机文本报告为 Pin、Pout、Gain、Iq、Idd、DE、S11、S22、Kf、B1f 十列。Kf/B1f 及 S11/S22 也作为 ADE outputs 提供。单次 Zin 和普通 load-pull 使用单点 ADE，不自动扫描 Pin。
+完整 PA 电路仿真使用 ADE Parametric Analysis，固定 Pin=-30～30 dBm、步长 2 dB，共 31 点。完整 PA 电路文本报告为 Pin、Pout、Gain、Iq、Idd、DE、S11、S22、Kf、B1f 十列。Kf/B1f 及 S11/S22 也作为 ADE outputs 提供。单次 Zin 和普通 load-pull 使用单点 ADE，不自动扫描 Pin。
 
 ## 7 测试台状态、结果覆盖与失败恢复
 
-- measure_Zin() 和 load_pull() 会修改指定 cell 的测试台，不是只读取整机。返回整机验证前，通过 copy_schematic(cell_name) 恢复核心，再用 generate_testbench(cell_name) 构建整机，不能在 Zin 或 load-pull 测试台上直接调用整机仿真并将其当成完整电路结果。
+- measure_Zin() 和 load_pull() 会修改指定 cell 的测试台，不是只读取完整 PA 电路。返回完整 PA 电路验证前，通过 copy_schematic(cell_name) 恢复核心，再用 generate_testbench(cell_name) 构建完整 PA 电路，不能在 Zin 或 load-pull 测试台上直接调用完整 PA 电路仿真并将其当成完整电路结果。
 - start_ADE_simulation() 和 Zin_ADE_simulation() 会重新写入各自报告；再次调用前保存需要保留的有效原始数据及完整参数关联。
 - load_pull() 建立测试台时会初始化报告，已有同名报告可能被清空。每批负载点扫描只在建立测试台时调用，不为每个点重复调用；新批次开始前保存旧批次。
 - load_pull_simulation() 追加单个负载点。续跑前核对已完成点所属的生成代码、频率、固定 Pin、电容和输入 S4P 版本；仅补失败或未完成点，防止重复追加或混合不同批次。
@@ -280,7 +280,7 @@ close_virtuoso()
 
 幅度 dB 使用 20×log10(|Sij|)，不是 10×log10(|Sij|)；-10 dB 对应幅度约 0.316。全 SP 扫描范围最大值不能冒充用户工作频带内最大值。确认实际 SP 频点覆盖及采样密度，插值得到带内值不代表增加了原始 SP 仿真点。
 
-整机报告中的 Kf、B1f 是 ymin 表达式得到的最小值，当前 SP 范围固定为 1～80 GHz；不能将它们描述成仅工作频带内的最小值。S11/S22、Kf/B1f 文本值按两位小数写出，接近 Kf=1 或 B1f=0 等严格阈值时可能无法据此判定，需使用可得原始结果复核或说明精度不足，不能把四舍五入后的边界值当作严格通过。
+完整 PA 电路报告中的 Kf、B1f 是 ymin 表达式得到的最小值，当前 SP 范围固定为 1～80 GHz；不能将它们描述成仅工作频带内的最小值。S11/S22、Kf/B1f 文本值按两位小数写出，接近 Kf=1 或 B1f=0 等严格阈值时可能无法据此判定，需使用可得原始结果复核或说明精度不足，不能把四舍五入后的边界值当作严格通过。
 
 按现有函数和可用原始数据读取所需频率或频带的结果，不为额外扫描修改受限的底层或生成脚本；数据不足时说明限制。S11/S22 是匹配诊断依据，不能单独决定改尺寸还是改网络；结合性能变化与有源参数—匹配闭环判断，见 optimization.md。
 
@@ -298,7 +298,7 @@ create_lib()、register_symbolLib() 及原理图、ADE 等通过 _submit_skill()
 | load_pull_simulation(sweep_pin=False) | _run_ocean_visible() | 固定 Pin、固定负载的单次仿真 |
 | Zin_ADE_simulation() | _run_ocean_visible() | 单次 Zin 测量，内部执行配置的 SP 频率分析 |
 
-_run_ade_parametric() 的名字不表示已提供任意参数的通用对外扫描接口：配置准备、结果提取和报告校验包含 Pin 或负载扫描的专用逻辑。当前电容、尺寸和偏置优化通过 run.py 分次改变一个参数、重复调用现有业务函数实现；每个整机候选的内部 Pin 扫描仍使用 ADE Parametric Analysis。不能自行传入任意扫描轴并假定受支持，也不能在固定一个 Pin 扫电容后就声称取得每组电容的 OP1dB。
+_run_ade_parametric() 的名字不表示已提供任意参数的通用对外扫描接口：配置准备、结果提取和报告校验包含 Pin 或负载扫描的专用逻辑。当前电容、尺寸和偏置优化通过 run.py 分次改变一个参数、重复调用现有业务函数实现；每个完整 PA 电路候选的内部 Pin 扫描仍使用 ADE Parametric Analysis。不能自行传入任意扫描轴并假定受支持，也不能在固定一个 Pin 扫电容后就声称取得每组电容的 OP1dB。
 
 start_ADE_simulation() 在 ADE 中执行 Pin 参数扫描，Zin_ADE_simulation() 执行单点分析。两者成功后保留结果窗口约 5 秒，再关闭本次 ADE、图形和原理图，Virtuoso 本身不退出。普通 load_pull_simulation() 保留 ADE，二维 load_pull_parametric_simulation() 或 sweep_pin=True 的诊断完成后关闭本次窗口。内部 _run_ocean_visible()、_run_ade_parametric()、_close_ade_windows() 无需由 run.py 替代业务函数直接调用。
 
